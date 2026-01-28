@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>OfficeVerse</title>
-    <link rel="stylesheet" href="./src/styles/ui.css?v=final_fix">
-    <script type="module" src="./src/main.js?v=final_fix"></script>
+    <link rel="stylesheet" href="./src/styles/ui.css?v=fix_layout_v2">
+    <link rel="stylesheet" href="./src/styles/executive_ui.css?v=fix_layout_v2">
+    <script type="module" src="./src/main.js?v=fix_layout_v2"></script>
 </head>
 
 <body>
@@ -138,6 +139,253 @@
             <div id="todo-input-area">
                 <input type="text" id="todo-input" placeholder="Add a new task..." maxlength="50">
                 <button id="add-todo-btn">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boss Control Panel -->
+    <div id="boss-panel-overlay" style="display: none;">
+        <div id="boss-modal">
+            <div id="boss-header">
+                <h2 id="boss-title">Boss Control Panel 💼</h2>
+                <button id="close-boss-btn">&times;</button>
+            </div>
+            <div id="boss-panel-content">
+                <p class="boss-description">Assign a priority task to all employees. This task will appear on every desk
+                    and cannot be removed.</p>
+                <div id="boss-input-area">
+                    <input type="text" id="boss-task-input" placeholder="Enter universal command..." maxlength="60">
+                    <button id="assign-boss-task-btn">Assign Task 📢</button>
+                </div>
+
+                <h3 class="boss-subtitle">Performance Monitor</h3>
+                <div id="boss-desk-grid">
+                    <div class="desk-box" data-desk="d1">D1</div>
+                    <div class="desk-box" data-desk="d2">D2</div>
+                    <div class="desk-box" data-desk="d3">D3</div>
+                    <div class="desk-box" data-desk="d4">D4</div>
+                    <div class="desk-box" data-desk="d5">D5</div>
+                    <div class="desk-box" data-desk="d6">D6</div>
+                </div>
+
+                <div id="boss-desk-detail">
+                    <h4 id="detail-title">Select a desk to view tasks</h4>
+                    <ul id="boss-detail-list" class="boss-read-only-todo">
+                        <!-- Populated via JS -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Panel -->
+    <div id="executive-panel-overlay" style="display: none;">
+        <div id="executive-modal">
+            <div id="executive-header">
+                <h2 id="executive-title">Executive Suite 💎</h2>
+                <button id="close-executive-btn">&times;</button>
+            </div>
+            <div id="executive-panel-content">
+                <p class="executive-description">Company success is shared! Activate the performance bonus for the
+                    entire office.</p>
+                <button id="trigger-bonus-btn">Trigger Global Bonus 💰</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GenAI Panel -->
+    <div id="genai-panel-overlay" style="display: none;">
+        <div id="genai-modal">
+            <!-- Header Section -->
+            <div id="genai-header">
+                <div id="genai-title-group">
+                    <h2 id="genai-title">✨ AI Assistant</h2>
+                    <span id="genai-status-badge" class="genai-status-badge">Online</span>
+                </div>
+                <button id="close-genai-btn" title="Close AI Assistant" aria-label="Close panel">&times;</button>
+            </div>
+
+            <!-- Panel Content -->
+            <div id="genai-panel-content">
+                <!-- Chat History -->
+                <div id="genai-chat-history" class="genai-chat-history" role="log" aria-live="polite"
+                    aria-label="Chat history">
+                    <div class="genai-message system" role="status">
+                        <strong>Welcome!</strong> I'm powered by Mistral AI. Ask me questions, get advice, or brainstorm
+                        ideas!
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="genai-loading" style="display: none;" class="genai-loading" role="status" aria-live="polite">
+                    <span class="genai-spinner"></span>
+                    <span>AI is thinking...</span>
+                </div>
+
+                <!-- Input Area -->
+                <div id="genai-input-area" class="genai-input-area">
+                    <div class="genai-input-wrapper">
+                        <input type="text" id="genai-input" class="genai-input-field"
+                            placeholder="Ask me anything... (max 500 characters)" maxlength="500" autocomplete="off"
+                            spellcheck="true" aria-label="Message input">
+                        <span id="genai-char-count" class="genai-char-count">0/500</span>
+                    </div>
+                    <button id="genai-send-btn" class="genai-send-button" title="Send message (Enter key works too)"
+                        aria-label="Send message">
+                        <span class="genai-send-icon">→</span>
+                        <span>Send</span>
+                    </button>
+                </div>
+
+                <!-- Helper Tips -->
+                <div class="genai-tips" id="genai-tips">
+                    <span class="genai-tip-icon">💡</span>
+                    <small>Try asking for advice, suggestions, or information!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GenAI API Key Configuration Terminal -->
+    <div id="genai-apikey-overlay" style="display: none;">
+        <div id="genai-apikey-terminal">
+            <!-- Terminal Header/Title Bar -->
+            <div id="terminal-titlebar">
+                <div class="terminal-buttons">
+                    <span class="terminal-btn close"></span>
+                    <span class="terminal-btn minimize"></span>
+                    <span class="terminal-btn maximize"></span>
+                </div>
+                <div class="terminal-title">GenAI Configuration Terminal</div>
+                <button id="close-apikey-btn" class="terminal-close-btn" title="Close">&times;</button>
+            </div>
+
+            <!-- Terminal Content -->
+            <div id="genai-apikey-content" class="terminal-content">
+                <!-- Terminal Output -->
+                <div id="terminal-output" class="terminal-output">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-text">GenAI Configuration System v1.0</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-text">Loading configuration module...</span>
+                    </div>
+                    <div class="terminal-line" style="margin-top: 10px;">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-status success">✓ System Ready</span>
+                    </div>
+                    <div class="terminal-line" style="margin: 15px 0;">
+                        <span
+                            class="terminal-text-dim">════════════════════════════════════════════════════════════</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text-warning">⚠ AUTHORIZATION REQUIRED</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">OpenAI API Key needed to activate AI services</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text-dim">Only Boss can authorize this configuration</span>
+                    </div>
+                    <div class="terminal-line" style="margin-top: 15px;">
+                        <span
+                            class="terminal-text-dim">════════════════════════════════════════════════════════════</span>
+                    </div>
+                </div>
+
+                <!-- Terminal Input Area -->
+                <div class="terminal-input-section">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-label">Enter API Key:</span>
+                    </div>
+                    <div class="terminal-input-wrapper">
+                        <span class="terminal-prompt-inline">> </span>
+                        <input type="password" id="genai-apikey-input" class="terminal-input-field" placeholder="sk-..."
+                            autocomplete="off" aria-label="OpenAI API Key" spellcheck="false">
+                        <button id="toggle-apikey-visibility" class="terminal-eye-btn"
+                            title="Show/Hide API Key">👁</button>
+                    </div>
+
+                    <!-- Terminal Commands -->
+                    <div class="terminal-commands" style="margin-top: 15px;">
+                        <button id="validate-apikey-btn" class="terminal-cmd-btn validate-btn"
+                            title="Validate the API key">
+                            <span class="cmd-icon">→</span> validate
+                        </button>
+                        <button id="save-apikey-btn" class="terminal-cmd-btn save-btn" title="Save and activate">
+                            <span class="cmd-icon">→</span> activate
+                        </button>
+                        <button id="apikey-help-btn" class="terminal-cmd-btn help-btn" title="Show help">
+                            <span class="cmd-icon">→</span> help
+                        </button>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div id="apikey-status-message" class="terminal-status-line"
+                        style="display: none; margin-top: 15px;"></div>
+                </div>
+
+                <!-- Help Section (Collapsible) -->
+                <div id="terminal-help-section" class="terminal-help-section" style="display: none; margin-top: 20px;">
+                    <div class="terminal-line" style="margin-bottom: 10px;">
+                        <span class="terminal-text-info">ℹ HELP DOCUMENTATION</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">1. Visit: <span
+                                class="terminal-link">https://platform.openai.com/api-keys</span></span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">2. Sign in to your OpenAI account</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">3. Click "Create new secret key"</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">4. Copy the key (starts with sk-)</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">5. Paste it in the input field above</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">6. Run: validate &nbsp;&nbsp; (to test)</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="terminal-text">7. Run: activate &nbsp;&nbsp; (to save)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Popup Modal -->
+    <div id="features-popup-overlay" style="display: none;">
+        <div id="features-popup-modal">
+            <div class="features-popup-header">
+                <h2>Welcome to OfficeVerse</h2>
+                <button id="features-popup-close" class="features-popup-close">&times;</button>
+            </div>
+            <div class="features-popup-content">
+                <p>Explore our features:</p>
+                <div class="features-grid">
+                    <button id="feature-techblog" class="feature-btn">
+                        <div class="feature-icon">📰</div>
+                        <div class="feature-name">Tech Blog</div>
+                        <div class="feature-desc">Read latest tech news</div>
+                    </button>
+                    <button id="feature-coming1" class="feature-btn coming-soon">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-name">Coming Soon</div>
+                        <div class="feature-desc">Feature 2</div>
+                    </button>
+                    <button id="feature-coming2" class="feature-btn coming-soon">
+                        <div class="feature-icon">⭐</div>
+                        <div class="feature-name">Coming Soon</div>
+                        <div class="feature-desc">Feature 3</div>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

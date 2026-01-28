@@ -4,6 +4,10 @@ import { initChat } from '../../network/ChatModule.js';
 import ZoneManager from '../map/ZoneManager.js';
 import MiniMap from '../ui/MiniMap.js';
 import TodoManager from '../ui/TodoManager.js';
+import TodoUI from '../ui/TodoUI.js';
+import BossPanelUI from '../ui/BossPanelUI.js';
+import GenAIUI from '../ui/GenAIUI.js';
+import ExecutiveUI from '../ui/ExecutiveUI.js';
 
 export default class OfficeScene extends Phaser.Scene {
     constructor() {
@@ -41,13 +45,10 @@ export default class OfficeScene extends Phaser.Scene {
         this.roomId = data?.roomId;
         this.roomName = data?.roomName;
         this.roomCode = data?.roomCode;
+        this.playerRole = data?.role || 'employee'; // 'boss' or 'employee'
 
         console.log('--- OfficeScene Initialization ---');
-        console.log('Room ID:', this.roomId);
-        console.log('Room Code:', this.roomCode);
-        console.log('Player ID:', this.myPlayerId);
-        console.log('Player Name:', this.myPlayerName);
-        console.log('---------------------------------');
+        console.log('Role:', this.playerRole);
     }
 
     preload() {
@@ -100,7 +101,13 @@ export default class OfficeScene extends Phaser.Scene {
 
         /* ---------------- CAMERA ---------------- */
         this.cameras.main.startFollow(this.player);
+        this.mapWidth = map.widthInPixels;
+        this.mapHeight = map.heightInPixels;
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+        // Initial Resize
+        this.handleResize(this.scale.gameSize);
+        this.scale.on('resize', this.handleResize, this);
 
         /* ---------------- HUD ELEMENTS ---------------- */
         this.playerNameText = this.add.text(this.player.x, this.player.y - 45, this.myPlayerName, {
@@ -153,7 +160,11 @@ export default class OfficeScene extends Phaser.Scene {
         this.eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         this.fKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
 
-        this.setupTodoListeners();
+        /* ---------------- UI COMPONENTS ---------------- */
+        this.todoUI = new TodoUI(this);
+        this.bossPanelUI = new BossPanelUI(this);
+        this.executiveUI = new ExecutiveUI(this);
+        this.genAIUI = new GenAIUI(this);
     }
 
     createAnimations() {
@@ -183,7 +194,7 @@ export default class OfficeScene extends Phaser.Scene {
 
     update(time, delta) {
         const deltaSeconds = delta / 1000;
-        const ratePerSec = 100 / 1800; // 30 minutes cycle
+        const ratePerSec = 100 / 1800;
 
         // Vitals
         this.stress = Math.min(100, this.stress + (ratePerSec * deltaSeconds));
@@ -213,7 +224,7 @@ export default class OfficeScene extends Phaser.Scene {
 
         // Graphics Update
         this.updatePlayerBars();
-        this.blurFX.strength = (this.stress / 100) * 2; // Gradual 0-2px blur
+        this.blurFX.strength = (this.stress / 100) * 2;
 
         // Network
         this.lastSent = this.lastSent || 0;
@@ -232,6 +243,7 @@ export default class OfficeScene extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.fKey)) this.handleZoneInteraction();
+        if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.handlePlayerInteraction();
     }
 
     updatePlayerBars() {
@@ -241,19 +253,15 @@ export default class OfficeScene extends Phaser.Scene {
         const barH = 4;
         this.barGraphics.clear();
 
-        // Energy (Glow Yellow)
+        // Energy
         this.barGraphics.lineStyle(3, 0xffff00, 0.3);
-        this.barGraphics.strokeRect(x, y, width, barH);
-        this.barGraphics.lineStyle(1, 0xffffff, 0.6);
         this.barGraphics.strokeRect(x, y, width, barH);
         this.barGraphics.fillStyle(0xffff00, 0.9);
         this.barGraphics.fillRect(x, y, width * (this.energy / 100), barH);
         this.energyIcon.setPosition(x - 12, y + 2);
 
-        // Stress (Glow Red)
+        // Stress
         this.barGraphics.lineStyle(3, 0xff0000, 0.3);
-        this.barGraphics.strokeRect(x, y + 8, width, barH);
-        this.barGraphics.lineStyle(1, 0xffffff, 0.6);
         this.barGraphics.strokeRect(x, y + 8, width, barH);
         this.barGraphics.fillStyle(0xff0000, 0.9);
         this.barGraphics.fillRect(x, y + 8, width * (this.stress / 100), barH);
@@ -267,20 +275,31 @@ export default class OfficeScene extends Phaser.Scene {
             if (parts[0] !== 'Broadcast') return;
 
             let idx = 1;
-            if (parts.length >= 10) { if (this.roomId && parts[1] != this.roomId) return; idx = 2; }
+            if (parts.length >= 11) { if (this.roomId && parts[1] != this.roomId) return; idx = 2; }
             const id = Number(parts[idx]);
             if (isNaN(id) || id === this.myPlayerId) return;
 
-            const x = Number(parts[idx + 1]), y = Number(parts[idx + 2]), name = parts[idx + 3], skin = parseInt(parts[idx + 4]), char = parts[idx + 5], anim = parts[idx + 6], flip = parts[idx + 7] === '1';
+            const x = Number(parts[idx + 1]);
+            const y = Number(parts[idx + 2]);
+            const name = parts[idx + 3];
+            const skin = parseInt(parts[idx + 4]);
+            const char = parts[idx + 5];
+            const anim = parts[idx + 6];
+            const flip = parts[idx + 7] === '1';
 
             if (!this.otherPlayers[id]) {
                 const sprite = this.physics.add.sprite(x, y, this.characterConfigs[char]?.idle || 'Owlet_Monster_Idle');
                 sprite.body.setAllowGravity(false);
+                sprite.setScale(1.25);
                 sprite.setTint(skin);
                 sprite.characterType = char;
+                sprite.body.setSize(20, 20);
+                sprite.body.setOffset(6, 10);
                 sprite.play(`${char}_${anim}`, true);
                 sprite.setFlipX(flip);
+                sprite.setDepth(y);
                 const label = this.add.text(x, y - 40, name, { font: '14px Arial', fill: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
+                label.setDepth(y + 1000);
                 this.otherPlayers[id] = { sprite, label };
             } else {
                 const p = this.otherPlayers[id];
@@ -317,11 +336,17 @@ export default class OfficeScene extends Phaser.Scene {
         this.interactionPrompt.setText('[E] Interact').setPosition(p.sprite.x, p.sprite.y - 55).setDepth(p.sprite.y + 2000).setVisible(true);
     }
 
+    handlePlayerInteraction() {
+        if (this.nearbyPlayer && window.selectPlayerForChat) {
+            window.selectPlayerForChat(this.nearbyPlayer.id);
+            this.showPopup(`Started private chat with ${this.nearbyPlayer.id}! 💬`);
+        }
+    }
+
     hideInteractionPrompt() { if (this.interactionPrompt) this.interactionPrompt.setVisible(false); }
 
     handleZoneEnter(z) {
         if (this.currentZone !== z.name) {
-            console.log('Entering zone:', z.name);
             this.currentZone = z.name;
             this.showZonePrompt(z.name);
         }
@@ -330,20 +355,19 @@ export default class OfficeScene extends Phaser.Scene {
     updateZoneInteraction() {
         let oz = null;
         if (this.zones) {
-            const children = this.zones.getChildren();
-            children.forEach(z => {
+            this.zones.getChildren().forEach(z => {
                 if (this.physics.overlap(this.player, z)) {
                     oz = z;
                 }
             });
         }
-
         if (oz) {
-            if (this.currentZone !== oz.name) this.handleZoneEnter(oz);
+            if (this.currentZone !== oz.name) {
+                this.handleZoneEnter(oz);
+            }
         } else if (this.currentZone) {
-            console.log('Exiting zone:', this.currentZone);
             this.hideZonePrompt();
-            if (this.activeDesk) this.closeTodo();
+            if (this.activeDesk && this.todoUI) this.todoUI.closeTodo();
         }
     }
 
@@ -357,6 +381,9 @@ export default class OfficeScene extends Phaser.Scene {
         else if (n === 'coffee') t = '[F] Grab Coffee';
         else if (n === 'zenRoom') t = '[F] Meditate';
         else if (n === 'executive') t = '[F] Executive Suite';
+        else if (n === 'bossRoom') {
+            t = (this.playerRole === 'boss') ? '[F] Boss Control Panel' : 'Boss Only Area';
+        }
         else if (n.match(/^d[1-6]$/)) t = '[F] Open To-Do List';
         this.zonePrompt.setText(t).setVisible(true);
     }
@@ -366,18 +393,24 @@ export default class OfficeScene extends Phaser.Scene {
     handleZoneInteraction() {
         if (!this.currentZone) return;
         switch (this.currentZone) {
+            case 'lobby': this.executiveUI.showFeaturesPopup(); break;
             case 'meetingRoom': window.open('https://meet.google.com/new', '_blank'); break;
-            case 'genAI': this.showPopup('AI Assistant coming soon! 🤖'); break;
-            case 'gaming': this.showPopup('Gaming coming soon! 🎮'); break;
+            case 'genAI': this.genAIUI.openGenAIPanel(); break;
+            case 'gaming': window.open('https://poki.com/', '_blank'); break;
             case 'exit': if (confirm('Leave office?')) window.location.reload(); break;
             case 'coffee': this.grabCoffee(); break;
             case 'zenRoom': this.toggleZenMode(); break;
-            case 'executive': this.showPopup('Welcome, Executive. 💼'); break;
+            case 'bossRoom':
+                if (this.playerRole === 'boss') {
+                    this.bossPanelUI.openBossPanel();
+                } else {
+                    this.showPopup('Access Denied: Only the Boss can enter! 🚫');
+                }
+                break;
+            case 'executive': this.executiveUI.openExecutivePanel(); break;
             default:
                 if (this.currentZone.match(/^d[1-6]$/)) {
-                    this.openTodo(this.currentZone);
-                } else {
-                    this.showPopup(`Interacted with ${this.currentZone}`);
+                    this.todoUI.openTodo(this.currentZone);
                 }
                 break;
         }
@@ -405,78 +438,36 @@ export default class OfficeScene extends Phaser.Scene {
         this.tweens.add({ targets: container, alpha: { from: 1, to: 0 }, delay: 2500, duration: 500, onComplete: () => { container.destroy(); if (this.activePopup === container) this.activePopup = null; } });
     }
 
-    /* ---------------- TO-DO LIST ---------------- */
-    setupTodoListeners() {
-        const closeBtn = document.getElementById('close-todo-btn');
-        if (closeBtn) closeBtn.onclick = () => this.closeTodo();
+    handleResize(gameSize) {
+        const width = gameSize.width;
+        const height = gameSize.height;
 
-        const addBtn = document.getElementById('add-todo-btn');
-        if (addBtn) addBtn.onclick = () => this.addTodo();
+        this.cameras.main.setViewport(0, 0, width, height);
 
-        const input = document.getElementById('todo-input');
-        if (input) input.onkeydown = (e) => {
-            if (e.key === 'Enter') this.addTodo();
-        };
-    }
+        if (this.mapWidth && this.mapHeight) {
+            // Zoom to cover
+            const zoomX = width / this.mapWidth;
+            const zoomY = height / this.mapHeight;
+            const zoom = Math.max(zoomX, zoomY, 1); // Ensure at least 1x zoom so we don't zoom out too far if map is giant (but user wants to fill, so zooming OUT might be valid if screen is huge? No, user wants map to fill screen. If map is small, we zoom IN. If map is huge, we zoom out but bounds limit it.
+            // Actually, if we want to FILL the screen, and the map is smaller than the screen, max(zoom) will be > 1.
+            // If the map is LARGER than the screen, max(zoom) will be < 1.
+            // The user complaint was "black screen part", which implies map was too small?
+            // "black screen is... outside of the map... I want the other part of the screen is filled with the office map"
+            // So we always want to COVER.
 
-    openTodo(deskId) {
-        this.activeDesk = deskId;
-        const title = document.getElementById('todo-title');
-        if (title) title.textContent = `Desk ${deskId.toUpperCase()} - To-Do List`;
+            // However, we probably don't want to zoom OUT less than 1 if pixel art.
+            // Let's rely on map covering.
 
-        const overlay = document.getElementById('todo-list-overlay');
-        if (overlay) overlay.style.display = 'flex';
-
-        this.renderTodos();
-    }
-
-    closeTodo() {
-        this.activeDesk = null;
-        const overlay = document.getElementById('todo-list-overlay');
-        if (overlay) overlay.style.display = 'none';
-
-        const input = document.getElementById('todo-input');
-        if (input) input.value = '';
-    }
-
-    addTodo() {
-        const input = document.getElementById('todo-input');
-        if (!input) return;
-        const text = input.value.trim();
-        if (text && this.activeDesk) {
-            this.todoManager.addTask(this.activeDesk, text);
-            input.value = '';
-            this.renderTodos();
+            const finalZoom = Math.max(zoomX, zoomY);
+            // Clamp to reasonable limits if needed, e.g. don't zoom out to 0.1
+            this.cameras.main.setZoom(Math.max(finalZoom, 1));
         }
-    }
 
-    renderTodos() {
-        if (!this.activeDesk) return;
-        const list = document.getElementById('todo-items');
-        if (!list) return;
-        list.innerHTML = '';
-        const tasks = this.todoManager.getTasks(this.activeDesk);
-
-        tasks.forEach(task => {
-            const li = document.createElement('li');
-            li.className = `todo-item ${task.completed ? 'completed' : ''}`;
-            li.innerHTML = `
-                <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                <span>${task.text}</span>
-                <button class="delete-task-btn">&times;</button>
-            `;
-
-            li.querySelector('input').onclick = () => {
-                this.todoManager.toggleTask(this.activeDesk, task.id);
-                this.renderTodos();
-            };
-
-            li.querySelector('.delete-task-btn').onclick = () => {
-                this.todoManager.deleteTask(this.activeDesk, task.id);
-                this.renderTodos();
-            };
-
-            list.appendChild(li);
-        });
+        if (this.miniMap) {
+            const mmSize = this.miniMap.size;
+            const mmX = width - mmSize - 20;
+            const mmY = height - mmSize - 20;
+            this.miniMap.setPosition(mmX, mmY);
+        }
     }
 }

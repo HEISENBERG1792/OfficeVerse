@@ -341,7 +341,16 @@ body {
     flex-grow: 1;
     position: relative;
     background-color: #000;
+    display: flex; /* Ensure flex behavior for child */
+    overflow: hidden; /* Prevent scrollbars if canvas is slightly off */
 }
+
+#game-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+} 
+
 
 /* Chat Interface Final (Restored Tabs) */
 #chat-interface-final {
@@ -649,34 +658,55 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    display: flex;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(12px) saturate(180%);
+    display: none;
+    /* Controlled by JS */
     justify-content: center;
     align-items: center;
     z-index: 10000;
 }
 
-#todo-modal {
-    background: rgba(13, 27, 42, 0.85);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(74, 144, 226, 0.3);
-    border-radius: 16px;
-    width: 400px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    animation: modalFadeIn 0.3s ease-out;
+#todo-list-overlay:not([style*="display: none"]) {
+    pointer-events: auto;
 }
 
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+#todo-list-overlay[style*="display: none"] {
+    pointer-events: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+#todo-modal {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    width: 420px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 #todo-header {
-    padding: 20px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
@@ -685,9 +715,11 @@ body {
 
 #todo-title {
     margin: 0;
-    font-size: 1.25rem;
-    color: #4a90e2;
-    font-weight: 600;
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 #close-todo-btn {
@@ -720,16 +752,20 @@ body {
 .todo-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    transition: background 0.2s;
+    gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .todo-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .todo-item input[type="checkbox"] {
@@ -741,26 +777,39 @@ body {
 
 .todo-item span {
     flex-grow: 1;
-    font-size: 0.95rem;
-    color: #e0e0e0;
+    font-size: 1rem;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.todo-item.completed {
+    opacity: 0.6;
 }
 
 .todo-item.completed span {
     text-decoration: line-through;
-    color: #666;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .delete-task-btn {
-    background: none;
+    background: rgba(255, 85, 85, 0.1);
     border: none;
-    color: #444;
+    color: #ff5555;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 1.1rem;
-    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.2s;
 }
 
 .delete-task-btn:hover {
-    color: #ff5555;
+    background: #ff5555;
+    color: white;
+    transform: scale(1.1);
 }
 
 #todo-input-area {
@@ -772,32 +821,1302 @@ body {
 
 #todo-input {
     flex-grow: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(74, 144, 226, 0.2);
-    border-radius: 8px;
-    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 18px;
     color: white;
     font-family: inherit;
     outline: none;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
+    font-size: 0.95rem;
 }
 
 #todo-input:focus {
-    border-color: #4a90e2;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
 }
 
 #add-todo-btn {
-    background: #4a90e2;
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 0 20px;
-    font-weight: 600;
+    border-radius: 12px;
+    padding: 0 24px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+#add-todo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+    filter: brightness(1.1);
+}
+
+#add-todo-btn:active {
+    transform: translateY(0);
+}
+
+/* Boss Control Panel */
+#boss-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    display: none;
+    /* Controlled by JS */
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+}
+
+#boss-panel-overlay:not([style*="display: none"]) {
+    pointer-events: auto;
+}
+
+#boss-panel-overlay[style*="display: none"] {
+    pointer-events: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+#boss-modal {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 183, 77, 0.3);
+    /* Gold tint for Boss */
+    border-radius: 24px;
+    width: 450px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+    animation: modalSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#boss-header {
+    padding: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.05), transparent);
+}
+
+#boss-title {
+    margin: 0;
+    font-size: 1.6rem;
+    color: #ffb74d;
+    /* Golden accent */
+    font-weight: 800;
+}
+
+#close-boss-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 2rem;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-#add-todo-btn:hover {
-    background: #569ff5;
-    transform: translateY(-1px);
+#close-boss-btn:hover {
+    color: #ff5555;
+}
+
+#boss-panel-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.boss-description {
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+#boss-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#boss-task-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 183, 77, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    color: white;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+#boss-task-input:focus {
+    border-color: #ffb74d;
+}
+
+#assign-boss-task-btn {
+    background: linear-gradient(135deg, #ffb74d 0%, #f57c00 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(245, 124, 0, 0.3);
+    transition: all 0.3s;
+}
+
+#assign-boss-task-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(245, 124, 0, 0.5);
+}
+
+.boss-subtitle {
+    margin: 20px 0 10px;
+    font-size: 1.1rem;
+    color: #ffb74d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#boss-desk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.desk-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    font-weight: 700;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+}
+
+.desk-box:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    color: #fff;
+}
+
+.desk-box.active {
+    background: rgba(74, 144, 226, 0.2);
+    border-color: #4a90e2;
+    color: #4a90e2;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+}
+
+#boss-desk-detail {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 150px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+#detail-title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+}
+
+.boss-read-only-todo {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.boss-read-only-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    color: #ccc;
+    font-size: 0.95rem;
+}
+
+.boss-read-only-item.done {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4a90e2;
+    flex-shrink: 0;
+}
+
+.status-dot.done {
+    background: #4ade80;
+}
+
+.premium-btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 145, 234, 0.5);
+    filter: brightness(1.1);
+}
+
+/* Bonus Rain Visuals */
+.bonus-money {
+    position: fixed;
+    top: -50px;
+    font-size: 2rem;
+    user-select: none;
+    pointer-events: none;
+    z-index: 99999;
+    animation: moneyFall 3s linear forwards;
+}
+
+@keyframes moneyFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.gold-tint {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: inset 0 0 100px rgba(255, 215, 0, 0.2);
+    pointer-events: none;
+    z-index: 99998;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.gold-tint.active {
+    opacity: 1;
+}
+
+/* ========== GenAI Panel Styles - Enhanced UI ========== */
+
+#genai-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+    backdrop-filter: blur(8px);
+    animation: fadeInOverlay 0.3s ease-out;
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+#genai-modal {
+    background: rgba(20, 30, 50, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(100, 200, 255, 0.25);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 550px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.37),
+        inset 0 0 20px rgba(100, 212, 255, 0.1),
+        0 0 80px rgba(74, 144, 226, 0.1);
+    overflow: hidden;
+    animation: slideUpPanel 0.4s ease-out;
+}
+
+@keyframes slideUpPanel {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#genai-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, rgba(100, 200, 255, 0.08), transparent);
+    backdrop-filter: blur(10px);
+}
+
+#genai-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#genai-title {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #64d4ff;
+    text-shadow: 0 0 15px rgba(74, 144, 226, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.genai-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(100, 212, 255, 0.2), rgba(74, 144, 226, 0.1));
+    color: #64d4ff;
+    border: 1px solid rgba(100, 212, 255, 0.3);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.genai-status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #64d4ff;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(0.8);
+    }
+}
+
+#close-genai-btn {
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    color: #999;
+    font-size: 1.6rem;
+    cursor: pointer;
+    padding: 4px 4px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    line-height: 1;
+}
+
+#close-genai-btn:hover {
+    color: #fff;
+    background: rgba(74, 144, 226, 0.2);
+    border-color: rgba(74, 144, 226, 0.4);
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.2);
+}
+
+#close-genai-btn:active {
+    transform: rotate(90deg) scale(0.95);
+}
+
+#genai-panel-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    padding: 16px;
+    gap: 12px;
+}
+
+.genai-chat-history {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(10, 15, 30, 0.2);
+    border-radius: 14px;
+    border: 1px solid rgba(100, 200, 255, 0.15);
+    scroll-behavior: smooth;
+    backdrop-filter: blur(5px);
+}
+
+.genai-message {
+    padding: 12px 14px;
+    border-radius: 12px;
+    max-width: 85%;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    animation: fadeInMessage 0.3s ease-out;
+}
+
+@keyframes fadeInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.genai-message.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.5) 0%, rgba(100, 170, 255, 0.3) 100%);
+    color: #ffffff;
+    border: 1px solid rgba(74, 144, 226, 0.6);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
+    font-weight: 500;
+}
+
+.genai-message.ai {
+    align-self: flex-start;
+    background: linear-gradient(135deg, rgba(100, 200, 255, 0.2) 0%, rgba(74, 160, 220, 0.1) 100%);
+    color: #e8f0ff;
+    border: 1px solid rgba(100, 200, 255, 0.25);
+    box-shadow: 0 4px 12px rgba(100, 200, 255, 0.1);
+}
+
+.genai-message.system {
+    align-self: center;
+    background: rgba(200, 100, 100, 0.15);
+    color: #ff9090;
+    font-size: 0.85rem;
+    max-width: 90%;
+    text-align: center;
+    border: 1px solid rgba(200, 100, 100, 0.2);
+    font-style: italic;
+}
+
+#genai-input-area {
+    display: flex;
+    gap: 10px;
+    padding-top: 4px;
+    flex-direction: column;
+}
+
+.genai-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#genai-input {
+    flex: 1;
+    padding: 12px 14px 12px 14px;
+    padding-right: 60px;
+    background: rgba(20, 30, 50, 0.3);
+    border: 1.5px solid rgba(100, 200, 255, 0.2);
+    border-radius: 10px;
+    color: #e8f0ff;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+}
+
+#genai-input::placeholder {
+    color: rgba(200, 200, 200, 0.4);
+}
+
+#genai-input:focus {
+    outline: none;
+    border-color: rgba(100, 212, 255, 0.6);
+    background: rgba(20, 30, 50, 0.5);
+    box-shadow: 
+        0 0 0 3px rgba(100, 212, 255, 0.15),
+        inset 0 0 12px rgba(100, 212, 255, 0.1),
+        0 0 20px rgba(100, 212, 255, 0.2);
+}
+
+#genai-char-count {
+    position: absolute;
+    right: 12px;
+    font-size: 0.75rem;
+    color: rgba(200, 200, 200, 0.5);
+    pointer-events: none;
+    font-weight: 500;
+}
+
+#genai-input:focus ~ #genai-char-count {
+    color: rgba(100, 212, 255, 0.7);
+}
+
+.genai-input-area {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.genai-send-button {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(100, 200, 255, 0.4) 0%, rgba(74, 170, 255, 0.3) 100%);
+    color: #e8f0ff;
+    border: 1.5px solid rgba(100, 212, 255, 0.4);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    box-shadow: 
+        0 8px 20px rgba(100, 212, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+}
+
+.genai-send-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.genai-send-button:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(100, 212, 255, 0.5) 0%, rgba(80, 180, 255, 0.4) 100%);
+    border-color: rgba(100, 212, 255, 0.6);
+    box-shadow: 
+        0 12px 30px rgba(100, 212, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 0 30px rgba(100, 212, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.genai-send-button:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.genai-send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+#genai-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    color: #64d4ff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: fadeInMessage 0.3s ease-out;
+}
+
+.genai-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(100, 212, 255, 0.2);
+    border-top-color: #64d4ff;
+    border-radius: 50%;
+    animation: spinSmooth 0.8s linear infinite;
+    box-shadow: 0 0 10px rgba(100, 212, 255, 0.3);
+}
+
+@keyframes spinSmooth {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tips Section */
+.genai-tips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(100, 212, 255, 0.12);
+    border: 1px solid rgba(100, 212, 255, 0.25);
+    border-radius: 8px;
+    color: rgba(100, 212, 255, 0.9);
+    font-size: 0.85rem;
+    animation: fadeInMessage 0.4s ease-out 0.2s both;
+    backdrop-filter: blur(8px);
+}
+
+.genai-tip-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* ========== Scrollbar Styling ========== */
+.genai-chat-history::-webkit-scrollbar {
+    width: 8px;
+}
+
+.genai-chat-history::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.genai-chat-history::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(74, 144, 226, 0.4), rgba(100, 200, 255, 0.3));
+    border-radius: 4px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.genai-chat-history::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(74, 144, 226, 0.6), rgba(100, 200, 255, 0.5));
+    box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
+}
+
+/* ========== GenAI API Key Terminal Styles ========== */
+
+#genai-apikey-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Terminal Window */
+#genai-apikey-terminal {
+    background: #0d1117;
+    border: 2px solid #30a46c;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(16, 164, 108, 0.3), 
+                inset 0 1px 0 rgba(48, 164, 108, 0.3);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Terminal Title Bar */
+#terminal-titlebar {
+    background: linear-gradient(to right, #1c2128 0%, #161b22 100%);
+    border-bottom: 1px solid #30a46c;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.terminal-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.terminal-btn.close {
+    background: #ff5f57;
+}
+
+.terminal-btn.minimize {
+    background: #febc2e;
+}
+
+.terminal-btn.maximize {
+    background: #28c940;
+}
+
+.terminal-btn:hover {
+    transform: scale(1.2);
+}
+
+.terminal-title {
+    flex: 1;
+    color: #30a46c;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: center;
+    user-select: none;
+}
+
+#close-apikey-btn {
+    background: none;
+    border: none;
+    color: #30a46c;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 8px;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+#close-apikey-btn:hover {
+    color: #79c0ff;
+    transform: scale(1.2);
+}
+
+/* Terminal Content Area */
+#genai-apikey-content {
+    flex: 1;
+    overflow-y: auto;
+    background: #0d1117;
+    padding: 15px 15px;
+    color: #30a46c;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Terminal Output */
+.terminal-output {
+    margin-bottom: 20px;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+.terminal-prompt {
+    color: #30a46c;
+    font-weight: bold;
+    flex-shrink: 0;
+    min-width: 15px;
+}
+
+.terminal-prompt-inline {
+    color: #30a46c;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.terminal-text {
+    color: #c9d1d9;
+    white-space: pre-wrap;
+}
+
+.terminal-text-dim {
+    color: #6e7681;
+}
+
+.terminal-text-warning {
+    color: #ff8a3a;
+    font-weight: bold;
+}
+
+.terminal-text-info {
+    color: #79c0ff;
+    font-weight: bold;
+}
+
+.terminal-status {
+    font-weight: bold;
+}
+
+.terminal-status.success {
+    color: #3fb950;
+}
+
+.terminal-status.error {
+    color: #f85149;
+}
+
+.terminal-link {
+    color: #58a6ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.terminal-link:hover {
+    color: #79c0ff;
+}
+
+/* Terminal Input Section */
+.terminal-input-section {
+    border-top: 1px solid #30a46c;
+    padding-top: 12px;
+}
+
+.terminal-label {
+    color: #c9d1d9;
+}
+
+.terminal-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(48, 164, 108, 0.1);
+    border: 1px solid #30a46c;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+}
+
+#genai-apikey-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #30a46c;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+#genai-apikey-input::placeholder {
+    color: #6e7681;
+}
+
+#genai-apikey-input:focus {
+    color: #79c0ff;
+}
+
+.terminal-eye-btn {
+    background: none;
+    border: none;
+    color: #30a46c;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    transition: all 0.2s;
+}
+
+.terminal-eye-btn:hover {
+    color: #79c0ff;
+    transform: scale(1.15);
+}
+
+/* Terminal Commands */
+.terminal-commands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.terminal-cmd-btn {
+    background: rgba(48, 164, 108, 0.15);
+    border: 1px solid #30a46c;
+    border-radius: 4px;
+    color: #30a46c;
+    padding: 8px 14px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cmd-icon {
+    color: #79c0ff;
+}
+
+.terminal-cmd-btn:hover {
+    background: rgba(48, 164, 108, 0.25);
+    border-color: #79c0ff;
+    color: #79c0ff;
+    box-shadow: 0 0 10px rgba(48, 164, 108, 0.3);
+}
+
+.terminal-cmd-btn:active {
+    transform: scale(0.97);
+}
+
+.terminal-cmd-btn.validate-btn {
+    border-color: #79c0ff;
+    color: #79c0ff;
+}
+
+.terminal-cmd-btn.validate-btn:hover {
+    background: rgba(121, 192, 255, 0.15);
+    box-shadow: 0 0 10px rgba(121, 192, 255, 0.3);
+}
+
+.terminal-cmd-btn.save-btn {
+    border-color: #3fb950;
+    color: #3fb950;
+}
+
+.terminal-cmd-btn.save-btn:hover {
+    background: rgba(63, 185, 80, 0.15);
+    box-shadow: 0 0 10px rgba(63, 185, 80, 0.3);
+}
+
+.terminal-cmd-btn.help-btn {
+    border-color: #ff8a3a;
+    color: #ff8a3a;
+}
+
+.terminal-cmd-btn.help-btn:hover {
+    background: rgba(255, 138, 58, 0.15);
+    box-shadow: 0 0 10px rgba(255, 138, 58, 0.3);
+}
+
+.terminal-cmd-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Terminal Status Line */
+.terminal-status-line {
+    padding: 10px 12px;
+    border-radius: 4px;
+    border-left: 3px solid;
+    font-weight: 600;
+    animation: slideDown 0.3s ease-out;
+}
+
+.terminal-status-line.success {
+    background: rgba(63, 185, 80, 0.15);
+    border-color: #3fb950;
+    color: #3fb950;
+}
+
+.terminal-status-line.error {
+    background: rgba(248, 81, 73, 0.15);
+    border-color: #f85149;
+    color: #f85149;
+}
+
+.terminal-status-line.info {
+    background: rgba(121, 192, 255, 0.15);
+    border-color: #79c0ff;
+    color: #79c0ff;
+}
+
+.terminal-status-line.warning {
+    background: rgba(255, 138, 58, 0.15);
+    border-color: #ff8a3a;
+    color: #ff8a3a;
+}
+
+/* Terminal Help Section */
+.terminal-help-section {
+    border-top: 1px solid #30a46c;
+    padding-top: 12px;
+    margin-top: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.terminal-help-section .terminal-line {
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+/* Scrollbar Styling for Terminal */
+#genai-apikey-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+#genai-apikey-content::-webkit-scrollbar-track {
+    background: rgba(48, 164, 108, 0.1);
+}
+
+#genai-apikey-content::-webkit-scrollbar-thumb {
+    background: #30a46c;
+    border-radius: 4px;
+}
+
+#genai-apikey-content::-webkit-scrollbar-thumb:hover {
+    background: #79c0ff;
+}
+
+/* Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== Responsive Design ========== */
+@media (max-width: 480px) {
+    #genai-apikey-modal {
+        max-width: 95%;
+        border-radius: 16px;
+    }
+    
+    #genai-apikey-header {
+        padding: 16px;
+    }
+    
+    #genai-apikey-title {
+        font-size: 1.2rem;
+    }
+    
+    #genai-apikey-content {
+        padding: 16px;
+    }
+    
+    .apikey-actions {
+        flex-direction: column;
+    }
+}
+@media (max-width: 768px) {
+    #genai-modal {
+        max-width: 95%;
+        max-height: 75vh;
+        border-radius: 16px;
+    }
+    
+    .genai-message {
+        max-width: 90%;
+        font-size: 0.9rem;
+    }
+    
+    #genai-title {
+        font-size: 1.2rem;
+    }
+    
+    #genai-input,
+    #genai-send-btn {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #genai-modal {
+        max-width: 100%;
+        max-height: 85vh;
+        border-radius: 12px;
+    }
+    
+    #genai-header {
+        padding: 14px 16px;
+    }
+    
+    .genai-message {
+        max-width: 88%;
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+    
+    #genai-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* ========== Features Popup Modal ========== */
+#features-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#features-popup-modal {
+    background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+    border: 2px solid #38bdf8;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+    width: 90%;
+    max-width: 600px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.features-popup-header {
+    background: linear-gradient(90deg, #0f172a 0%, #1a1f2e 100%);
+    padding: 20px;
+    border-bottom: 1px solid #38bdf8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.features-popup-header h2 {
+    margin: 0;
+    color: #38bdf8;
+    font-size: 24px;
+    font-family: 'Courier New', monospace;
+}
+
+.features-popup-close {
+    background: none;
+    border: none;
+    color: #38bdf8;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.features-popup-close:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: #0ea5e9;
+}
+
+.features-popup-content {
+    padding: 30px;
+    color: #e2e8f0;
+}
+
+.features-popup-content p {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    color: #94a3b8;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.feature-btn {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 2px solid #38bdf8;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.feature-btn:hover {
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    border-color: #0ea5e9;
+    color: #0f172a;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
+}
+
+.feature-btn.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.feature-btn.coming-soon:hover {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #38bdf8;
+    color: #e2e8f0;
+    transform: none;
+    box-shadow: none;
+}
+
+.feature-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.feature-name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.feature-desc {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.feature-btn.coming-soon .feature-desc {
+    color: #94a3b8;
+}
+
+@media (max-width: 600px) {
+    #features-popup-modal {
+        width: 95%;
+        max-width: none;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .features-popup-header h2 {
+        font-size: 20px;
+    }
+
+    .features-popup-content {
+        padding: 20px;
+    }
 }

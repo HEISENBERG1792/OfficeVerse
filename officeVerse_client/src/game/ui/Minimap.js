@@ -87,6 +87,22 @@ export default class MiniMap {
     });
   }
 
+  setPosition(x, y) {
+    this.x = x;
+    this.y = y;
+    this.camera.setViewport(x, y, this.size, this.size);
+
+    // Update mask
+    const maskShape = this.scene.make.graphics({ x: 0, y: 0, add: false });
+    maskShape.fillStyle(0xffffff);
+    maskShape.fillCircle(x + this.size / 2, y + this.size / 2, this.size / 2);
+    const mask = maskShape.createGeometryMask();
+    this.camera.setMask(mask);
+
+    // Update border
+    this.borderCircle.setPosition(x + this.size / 2, y + this.size / 2);
+  }
+
   // No abstract markers needed: camera natively sees world sprites
   addPlayerDot() { }
   addRemotePlayerDot() { }

@@ -1,0 +1,41 @@
+# General
+logs
+*.log
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+**/.idea/
+**/.vscode/
+.vs/
+**/.vs/
+*.swp
+*.swo
+
+# Node.js
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/package-lock.json
+**/yarn.lock
+dist/
+coverage/
+
+# Java & Gradle
+.gradle/
+build/
+**/bin/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
